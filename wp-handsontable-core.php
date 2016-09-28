@@ -1,7 +1,7 @@
 <?php 
 /**
  * Plugin Name: WP HandsOnTable Core
- * Plugin URI: http://in-soft.pro/plugins/wc-custom-checkout/
+ * Plugin URI: http://in-soft.pro/plugins/wp-handsontable-core/
  * Description: Support functions HandsOnTable in Wordpress. This plugin is a service and not directly caused, but only adds classes required other plugins.
  * Version: 0.1
  * Author: Ivan Nikitin and partners
