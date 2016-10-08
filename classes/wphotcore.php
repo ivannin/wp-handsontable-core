@@ -19,8 +19,9 @@ class WP_HOT_Core
         // Инициализация параметров
         $this->_params = array(
             'id'            =>  'hot_' . md5(microtime()),	// ID таблицы
-            'loadHandler'   =>  '',     					// Имя функции обработчика загружки данных
+            'loadHandler'   =>  '',     					// Имя функции обработчика загрузки данных
             'saveHandler'   =>  '',							// Имя функции обработчика сохранения данных
+            'ajaxAction'    =>  get_class($this),			// Имя действия для Ajax вызовов
             
         );        
         // Переопределение параметров
@@ -29,17 +30,16 @@ class WP_HOT_Core
         
         // Загрузка стилей
         wp_enqueue_style("wp-jquery-ui-dialog");
-        wp_enqueue_style('handsontable', WP_HOT_CORE_PATH . 'js/handsontable-0.20.0/handsontable.full.min.css', false, '0.20.0', 'all');
+        wp_enqueue_style('handsontable', WP_HOT_CORE_URL . 'js/handsontable-0.20.0/handsontable.full.min.css', false, '0.20.0', 'all');
         
 		// Регистрация скриптов
-        wp_register_script('handsontable', WP_HOT_CORE_PATH . 'js/handsontable-0.20.0/handsontable.full.min.js', array('jquery-ui-dialog'), '0.20.0', true);
-        wp_register_script('numeral-ru', WP_HOT_CORE_PATH . 'js/numeral/languages/ru.min.js', array('handsontable'), '1.5.3', true);
+        wp_register_script('handsontable', WP_HOT_CORE_URL . 'js/handsontable-0.20.0/handsontable.full.min.js', array('jquery-ui-dialog'), '0.20.0', true);
+        wp_register_script('numeral-ru', WP_HOT_CORE_URL . 'js/numeral/languages/ru.min.js', array('handsontable'), '1.5.3', true);
 
         // Загрузка скриптов
 		wp_enqueue_script('jquery-ui-dialog');
         wp_enqueue_script('handsontable');
         wp_enqueue_script('numeral-ru');
-
     }
     
     
@@ -55,8 +55,6 @@ class WP_HOT_Core
             $this->getHtmlLoadButton()  . ' ' . 
             $this->getHtmlSaveButton();
     }
-    
-    
     
     /**
      * Метод возвращает HTML код кнопки [Load]
@@ -122,12 +120,29 @@ class WP_HOT_Core
      */        
     protected function getJsHandlers()
     {           
-        return '';
+        // Штатные обработчики
+		$handlers = array(
+			'search.js',		// Поиск
+		);
+		
+		$js = '';
+		foreach ($handlers as $jsFile)
+		{
+			if ( WP_DEBUG )
+				$js .= '/* ' . WP_HOT_CORE_PATH . 'js/' . $jsFile . ' */' . PHP_EOL;
+ 			$jsMinFile = str_replace('.js', '.min.js', $jsFile);
+			if ( file_exists( WP_HOT_CORE_PATH . 'js/' . $jsMinFile ) && ! WP_DEBUG )
+			{
+				$js .= file_get_contents( WP_HOT_CORE_PATH . 'js/' . $jsMinFile ) . PHP_EOL;
+			}
+			elseif ( file_exists( WP_HOT_CORE_PATH . 'js/' . $jsFile ) )
+			{
+				$js .= file_get_contents( WP_HOT_CORE_PATH . 'js/' . $jsFile ) . PHP_EOL;
+			}
+		}
+		return $js;
     }    
-    
-    
-    
-        
+      
     /**
      * Вывод HTML таблицы
      *
@@ -139,8 +154,10 @@ class WP_HOT_Core
         $htmlControls   = $this->getHtmlControls();
         $tableOptions   = $this->getTableOptions();
         $preloadedData  = $this->getPreloadedData();
-        $jsHandlers     = $this->getJsHandlers();
-        $progressImage  = IN_URL . 'img/ProcessAnimationSmall2_v3.gif';
+        $loadAction     = 'load_' . $this->ajaxAction;
+        $saveAction    =  'save_' . $this->ajaxAction;
+		$jsHandlers     = $this->getJsHandlers();
+        $progressImage  = WP_HOT_CORE_URL . 'img/process-animation.gif';
         
         $html = <<<EOD
 <div id="{$this->id}" class="handsontable-container">
@@ -152,13 +169,12 @@ class WP_HOT_Core
         var containerId = '{$this->id}';
         var options = {$tableOptions};
         options.data = {$preloadedData};
+        var dataId = 'data_' + containerId;
+        window[dataId] = options.data;
+		var loadAction = '{$loadAction}';
+		var saveAction = '{$saveAction}';
         var currentTable = $('#{$this->id} .hot');
         currentTable.handsontable(options);
-        // Сохраним данные для манипуляции
-        var dataId = 'data_' + containerId;
-        window[dataId] = options.data
-        // Для отладки
-        window.myHOT = currentTable;
         {$jsHandlers}
     });
     </script>    
@@ -187,6 +203,6 @@ EOD;
     public function __get($key) 
     {
         return array_key_exists( $key, $this->_params ) ? $this->_params[$key] : NULL;
-    }        
+    }   
 }
 ?>

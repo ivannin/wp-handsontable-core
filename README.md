@@ -10,7 +10,6 @@ if ( ! defined( 'WP_HOT_CORE_VERSION' ))
 {
 	add_action( 'admin_notices', 'my_wp_hot_core_missing' );
 	deactivate_plugins( plugin_basename( __FILE__ ) );
-	wp_die( __( 'My Plugin requires wp-handsontable-core', 'my-plugin' ) );
 }
 	
 
