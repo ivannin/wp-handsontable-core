@@ -162,7 +162,7 @@ class WP_HOT_Core
         $html = <<<EOD
 <div id="{$this->id}" class="handsontable-container">
     <div class="fieldGroup">{$htmlControls}</div><br style="clear:both" />
-    <div class="hot" style="width:90%;margin-top:20px;"></div><br style="clear:both" />
+    <div class="hot"></div><br style="clear:both" />
     <div class="animationProcess" style="position:fixed;top:50%;left:50%;margin-top:0;margin-left:0;z-index:999;display:none"><img src="{$progressImage}" alt="Пожалуйста, ждите..." /></div>
     <script>
     jQuery(function($){
